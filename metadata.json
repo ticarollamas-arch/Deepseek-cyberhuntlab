@@ -1,0 +1,6 @@
+{
+  "name": "Cyber Hunter Lab",
+  "description": "Plataforma de Security Research com Chat IA e Agente ReAct integrado com Ollama local e NVIDIA NIM.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

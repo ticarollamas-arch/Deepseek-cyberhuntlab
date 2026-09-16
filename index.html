@@ -1,0 +1,1905 @@
+<!-- index.html — Frontend single-file (HTML + CSS + JS) para Cyber Hunter Lab -->
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#020617" />
+<title>Cyber Hunter Lab — Security Research Platform</title>
+<meta name="description" content="Cyber Hunter Lab — Plataforma de Security Research com Chat IA e Agente autônomo com suporte a Ollama e NVIDIA NIM." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        },
+        screens: { 'xs': '400px' },
+      },
+    },
+  };
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; max-width: 100vw; }
+  pre, code { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  *, *::before, *::after { box-sizing: border-box; }
+  section { max-width: 100vw; }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .animate-gradient, .marquee-track { animation: none !important; }
+  }
+
+  @keyframes gradient-shift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .animate-gradient { background-size: 200% 200%; animation: gradient-shift 6s ease infinite; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #090d16; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+
+  @keyframes scroll-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee-track { display: flex; animation: scroll-x 30s linear infinite; width: max-content; }
+  .marquee-mask {
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+
+  .decor-blob { position: absolute; border-radius: 9999px; filter: blur(80px); pointer-events: none; }
+  .btn-shine { position: relative; overflow: hidden; }
+  .btn-shine::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+    transform: translateX(-100%); transition: transform .7s ease;
+  }
+  .btn-shine:hover::before { transform: translateX(100%); }
+
+  .cursor-blink { display: inline-block; width: 8px; height: 16px; background-color: #4D6BFE; animation: blink 1s infinite; vertical-align: middle; }
+  @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+  /* Estilos DeepSeek */
+  @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .animate-spin-slow { animation: spin-slow 6s linear infinite; }
+
+  @keyframes voice-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+  .voice-recording-active { animation: voice-pulse 1s infinite; color: #ef4444 !important; }
+
+  .deepseek-think-box.collapsed .think-content { display: none; }
+  .deepseek-think-box.collapsed .think-chevron { transform: rotate(-90deg); }
+
+  /* Estilos do Markdown no Chat DeepSeek */
+  .prose-chat { color: #f1f5f9; font-size: 14.5px; line-height: 1.68; }
+  .prose-chat p { margin: 8px 0; }
+  .prose-chat pre { background: #131318; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin: 12px 0; overflow-x: auto; font-size: 13px; }
+  .prose-chat code { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .prose-chat p code { background: rgba(77,107,254,0.12); border: 1px solid rgba(77,107,254,0.25); padding: 2px 6px; border-radius: 6px; color: #88A5FE; }
+  .prose-chat table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; border-radius: 8px; overflow: hidden; }
+  .prose-chat th, .prose-chat td { border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; text-align: left; }
+  .prose-chat th { background: rgba(255,255,255,0.05); font-weight: 600; color: #fff; }
+  .prose-chat ul { list-style-type: disc; padding-left: 22px; margin: 8px 0; }
+  .prose-chat ol { list-style-type: decimal; padding-left: 22px; margin: 8px 0; }
+  .prose-chat li { margin: 4px 0; }
+  .prose-chat h1, .prose-chat h2, .prose-chat h3 { color: #ffffff; font-weight: 700; margin: 14px 0 8px 0; }
+  .prose-chat h1 { font-size: 1.25rem; }
+  .prose-chat h2 { font-size: 1.15rem; }
+  .prose-chat h3 { font-size: 1.05rem; }
+  .prose-chat blockquote { border-left: 3px solid #4D6BFE; padding-left: 12px; color: #94a3b8; margin: 10px 0; font-style: italic; }
+</style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500/30">
+
+<!-- BLOBS DECORATIVOS -->
+<div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+  <div class="decor-blob -top-40 -left-40 h-[400px] w-[400px] bg-cyan-500/10"></div>
+  <div class="decor-blob top-1/3 -right-40 h-[400px] w-[400px] bg-violet-500/10"></div>
+  <div class="decor-blob bottom-0 left-1/2 h-[400px] w-[400px] -translate-x-1/2 bg-fuchsia-500/10"></div>
+  <div class="absolute inset-0 grid-bg"></div>
+</div>
+
+<!-- 1. HEADER FIXO -->
+<header class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-slate-950/70 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+    <a href="#" class="group flex min-w-0 items-center gap-2 sm:gap-3">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 shadow-lg shadow-cyan-500/20 transition group-hover:shadow-cyan-500/40 sm:h-10 sm:w-10">
+        <svg class="h-4 w-4 text-white sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <span class="truncate text-base font-semibold tracking-tight sm:text-lg">Cyber<span class="text-cyan-400">Hunter</span>Lab</span>
+    </a>
+
+    <!-- NAV FINAL: Processo · Arquitetura · Ecossistema · Pipeline · Chat · FAQ -->
+    <nav class="hidden items-center gap-6 text-sm text-slate-400 lg:flex">
+      <a href="#processo" class="transition hover:text-white">Processo</a>
+      <a href="#arquitetura" class="transition hover:text-white">Arquitetura</a>
+      <a href="#ecossistema" class="transition hover:text-white">Ecossistema</a>
+      <a href="#pipeline" class="transition hover:text-white">Pipeline</a>
+      <a href="#chat-agente" class="text-cyan-300 font-medium transition hover:text-cyan-200">Chat &amp; Agente</a>
+      <a href="#faq" class="transition hover:text-white">FAQ</a>
+    </nav>
+
+    <a href="#chat-agente"
+       class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 px-3.5 py-2 text-xs font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:shadow-cyan-500/40 sm:px-4 sm:text-sm">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>
+      <span>Abrir Terminal IA</span>
+    </a>
+  </div>
+</header>
+
+<!-- 2. HERO -->
+<section class="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pb-24 sm:pt-40 md:pt-48">
+  <div class="mx-auto max-w-4xl text-center">
+    <div class="reveal mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-[11px] font-medium text-cyan-300 backdrop-blur sm:mb-8 sm:px-4 sm:text-xs">
+      <span class="relative flex h-2 w-2 shrink-0">
+        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+        <span class="relative inline-flex h-2 w-2 rounded-full bg-cyan-400"></span>
+      </span>
+      <span class="truncate">Security Research Platform · Ollama Local + NVIDIA NIM</span>
+    </div>
+
+    <h1 class="reveal text-balance text-4xl font-extrabold leading-[1.05] tracking-tight xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
+      O <span class="animate-gradient bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Cyber Hunter Lab</span> centraliza toda a sua análise de segurança.
+    </h1>
+
+    <p class="reveal mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-400 sm:mt-8 sm:text-lg md:text-xl">
+      Plataforma de <strong class="text-slate-200">Security Research</strong> que combina ferramentas especializadas,
+      módulos próprios, automação, correlação de dados e análise de evidências para transformar informações coletadas
+      durante uma investigação em <strong class="text-slate-200">resultados estruturados</strong>.
+    </p>
+
+    <div class="reveal mt-8 flex flex-col items-stretch justify-center gap-3 sm:mt-12 sm:flex-row sm:items-center sm:gap-4">
+      <a href="#chat-agente"
+         class="btn-shine group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-xl hover:shadow-cyan-500/40 sm:w-auto sm:px-8 sm:py-4 sm:text-base">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+        Acessar Chat &amp; Agente
+      </a>
+
+      <a href="#pipeline"
+         class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-medium text-slate-200 backdrop-blur transition hover:border-white/20 hover:bg-white/10 sm:w-auto sm:px-8 sm:py-4 sm:text-base">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+        Ver pipeline
+      </a>
+    </div>
+
+    <!-- Terminal fake -->
+    <div class="reveal mx-auto mt-12 w-full max-w-3xl sm:mt-20">
+      <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 text-left shadow-2xl shadow-cyan-500/5 backdrop-blur">
+        <div class="flex items-center gap-2 border-b border-white/5 px-3 py-2.5 sm:px-4 sm:py-3">
+          <span class="h-2.5 w-2.5 rounded-full bg-red-500/70 sm:h-3 sm:w-3"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-yellow-500/70 sm:h-3 sm:w-3"></span>
+          <span class="h-2.5 w-2.5 rounded-full bg-green-500/70 sm:h-3 sm:w-3"></span>
+          <span class="ml-2 truncate text-[10px] text-slate-500 sm:ml-3 sm:text-xs">cyberhunter — análise em andamento</span>
+        </div>
+        <pre class="overflow-x-auto p-4 text-xs leading-relaxed text-slate-300 sm:p-6 sm:text-sm"><code><span class="text-cyan-400">$</span> cyberhunter scan --target alvo-autorizado.com.br
+
+<span class="text-slate-500">▸</span> Reconhecimento.............. <span class="text-emerald-400">ok</span>
+<span class="text-slate-500">▸</span> Enumeração.................. <span class="text-emerald-400">47 ativos</span>
+<span class="text-slate-500">▸</span> Correlação.................. <span class="text-violet-400">12 conexões</span>
+<span class="text-slate-500">▸</span> Evidence Gate............... <span class="text-amber-400">3 em revisão</span>
+<span class="text-slate-500">▸</span> Validação................... <span class="text-emerald-400">confirmado</span>
+<span class="text-slate-500">▸</span> Triagem..................... <span class="text-emerald-400">priorizado</span>
+
+<span class="text-cyan-400">✓</span> Relatório em <span class="text-white">./cyberhunter-report.pdf</span>
+</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="reveal mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-3 sm:mt-20 sm:gap-4 md:grid-cols-4">
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-5 text-center backdrop-blur transition hover:border-cyan-400/30 hover:bg-white/[0.04] sm:px-6 sm:py-6">
+      <div class="text-2xl font-bold text-white transition group-hover:text-cyan-400 sm:text-4xl">8</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500 sm:mt-2 sm:text-xs">Etapas do processo</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-5 text-center backdrop-blur transition hover:border-violet-400/30 hover:bg-white/[0.04] sm:px-6 sm:py-6">
+      <div class="text-2xl font-bold text-white transition group-hover:text-violet-400 sm:text-4xl">Evidence</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500 sm:mt-2 sm:text-xs">First approach</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-5 text-center backdrop-blur transition hover:border-fuchsia-400/30 hover:bg-white/[0.04] sm:px-6 sm:py-6">
+      <div class="text-2xl font-bold text-white transition group-hover:text-fuchsia-400 sm:text-4xl">8</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500 sm:mt-2 sm:text-xs">Ecossistemas</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-3 py-5 text-center backdrop-blur transition hover:border-emerald-400/30 hover:bg-white/[0.04] sm:px-6 sm:py-6">
+      <div class="text-2xl font-bold text-white transition group-hover:text-emerald-400 sm:text-4xl">1</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500 sm:mt-2 sm:text-xs">Plataforma única</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. MARQUEE -->
+<section class="relative w-full border-y border-white/5 bg-white/[0.01] py-6 sm:py-8">
+  <div class="marquee-mask w-full overflow-hidden">
+    <div class="marquee-track gap-6 sm:gap-12">
+      <div class="flex shrink-0 items-center gap-6 pr-6 sm:gap-12 sm:pr-12">
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Reconhecimento</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Enumeração</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Correlação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Evidence Gate</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Validação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Deduplicação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Triagem</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Relatórios</span>
+        <span class="text-slate-700">◆</span>
+      </div>
+      <div class="flex shrink-0 items-center gap-6 pr-6 sm:gap-12 sm:pr-12" aria-hidden="true">
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Reconhecimento</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Enumeração</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Correlação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Evidence Gate</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Validação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Deduplicação</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Triagem</span>
+        <span class="text-slate-700">◆</span>
+        <span class="text-sm font-semibold text-slate-500 sm:text-lg">Relatórios</span>
+        <span class="text-slate-700">◆</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. SEÇÃO PROCESSO (8 CARDS) -->
+<section id="processo" class="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal mb-10 text-center sm:mb-16">
+    <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/5 px-3 py-1 text-xs font-medium text-violet-300">
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg>
+      Processo
+    </div>
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">Uma única plataforma <span class="text-cyan-400">para todo o processo</span></h2>
+    <p class="mx-auto mt-4 max-w-2xl text-sm text-slate-400 sm:mt-6 sm:text-lg">O Cyber Hunter Lab organiza o processo de análise em diferentes etapas, permitindo que os dados sejam coletados, normalizados, correlacionados e analisados de forma contínua.</p>
+  </div>
+
+  <div class="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <!-- 1. Reconhecimento -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Reconhecimento</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Coleta e organização das informações iniciais relacionadas ao alvo autorizado, formando a base analítica.</p>
+    </article>
+
+    <!-- 2. Enumeração -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-violet-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Enumeração</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Identificação de ativos, serviços, tecnologias, endpoints e parâmetros na superfície descoberta.</p>
+    </article>
+
+    <!-- 3. Correlação -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-amber-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Correlação</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Cruzamento inteligente entre saídas de múltiplas ferramentas para mapear relações e vetores encadeados.</p>
+    </article>
+
+    <!-- 4. Evidence Gate -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Evidence Gate</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Camada de contenção rigorosa que exige evidência concreta antes de classificar qualquer achado.</p>
+    </article>
+
+    <!-- 5. Validação -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-pink-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Validação</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Teste de reprodutibilidade e confirmação técnica de impacto real com PoC isolada.</p>
+    </article>
+
+    <!-- 6. Deduplicação -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-yellow-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Deduplicação</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Agrupamento semântico de alertas redundantes para evitar ruído e relatórios inflados.</p>
+    </article>
+
+    <!-- 7. Triagem -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-indigo-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Triagem</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Priorização por severidade CVSS v3.1, nível de exposição e plausibilidade de exploração.</p>
+    </article>
+
+    <!-- 8. Relatórios -->
+    <article class="reveal group relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-sky-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+      </div>
+      <h3 class="mb-2 text-lg font-semibold text-white">Relatórios</h3>
+      <p class="text-xs leading-relaxed text-slate-400">Documentação técnica estruturada, passos exatos de reprodução e remediação acionável.</p>
+    </article>
+  </div>
+</section>
+
+<!-- 5. SEÇÃO ARQUITETURA (3 CARDS) -->
+<section id="arquitetura" class="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal text-center">
+    <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/5 px-3 py-1 text-xs font-medium text-violet-300 sm:mb-6">
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>
+      Arquitetura Integrada
+    </div>
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Orquestração entre <span class="text-violet-400">ferramentas e módulos</span></h2>
+    <p class="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-slate-400 sm:mt-6 sm:text-lg">
+      O Cyber Hunter Lab funciona como uma camada de orquestração entre ferramentas de segurança, módulos próprios e mecanismos de análise.
+    </p>
+  </div>
+
+  <div class="reveal mt-12 grid gap-4 sm:mt-16 sm:gap-6 sm:grid-cols-3">
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/20 text-cyan-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z"/></svg>
+      </div>
+      <h3 class="mb-2 text-base font-semibold text-white sm:text-lg">Ferramentas especializadas</h3>
+      <p class="text-xs leading-relaxed text-slate-400 sm:text-sm">Integração com binários padrão da comunidade e scanners headless em containers isolados.</p>
+    </div>
+
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-violet-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/20 text-violet-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63"/></svg>
+      </div>
+      <h3 class="mb-2 text-base font-semibold text-white sm:text-lg">Módulos próprios</h3>
+      <p class="text-xs leading-relaxed text-slate-400 sm:text-sm">Parsers estruturados, heurísticas antifalso-positivo e verificadores de integridade SHA-256.</p>
+    </div>
+
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur transition hover:-translate-y-1 hover:border-emerald-400/30 hover:bg-white/[0.04]">
+      <div class="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-300">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+      </div>
+      <h3 class="mb-2 text-base font-semibold text-white sm:text-lg">Pipeline única</h3>
+      <p class="text-xs leading-relaxed text-slate-400 sm:text-sm">Todas as descobertas são canalizadas em uma única esteira executada sob demanda.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. SEÇÃO ECOSSISTEMA (8 CARDS) -->
+<section id="ecossistema" class="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal mb-10 text-center sm:mb-16">
+    <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1 text-xs font-medium text-cyan-300">
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582"/></svg>
+      Ecossistema
+    </div>
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">Conectado ao ecossistema de <span class="text-cyan-400">Security Research</span></h2>
+    <p class="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-slate-400 sm:mt-6 sm:text-lg">
+      Compatível com escopos e padrões de submissão dos principais programas de divulgação de vulnerabilidades do mundo.
+    </p>
+  </div>
+
+  <div class="reveal grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">HackerOne</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">Bugcrowd</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">Intigriti</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">YesWeHack</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">Synack</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">Immunefi</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Web3 / Crypto</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">HackenProof</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Web3 / Crypto</div>
+    </div>
+    <div class="group rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-6 text-center backdrop-blur transition hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-white/[0.05]">
+      <div class="text-base font-semibold text-white sm:text-lg">Open Bug Bounty</div>
+      <div class="mt-1 text-[10px] uppercase tracking-wider text-slate-500">Bug Bounty</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. SEÇÃO EVIDENCE-FIRST (2 COLUNAS) -->
+<section class="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/5 via-violet-500/5 to-fuchsia-500/5 p-6 backdrop-blur sm:p-12 md:p-16">
+    <div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      <div>
+        <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-xs font-medium text-emerald-300">
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          Evidence-First
+        </div>
+        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Abordagem baseada <span class="text-emerald-400">em evidências</span></h2>
+        <p class="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
+          A plataforma utiliza uma abordagem baseada em evidências. Um resultado produzido por uma ferramenta <strong class="text-slate-200">não é automaticamente tratado como vulnerabilidade confirmada</strong>.
+        </p>
+        <p class="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">
+          Os dados passam por etapas de correlação, análise, validação e triagem para determinar a qualidade e a reprodutibilidade de cada resultado.
+        </p>
+      </div>
+
+      <!-- 4 Níveis de Evidência -->
+      <div class="space-y-3">
+        <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 backdrop-blur">
+          <div class="flex items-center gap-3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 text-xs font-bold text-cyan-300">1</span>
+            <div>
+              <div class="text-sm font-semibold text-white">Dados coletados</div>
+              <div class="text-xs text-slate-400">Saída bruta das ferramentas — ainda não analisada.</div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 backdrop-blur">
+          <div class="flex items-center gap-3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-300">2</span>
+            <div>
+              <div class="text-sm font-semibold text-white">Candidatos</div>
+              <div class="text-xs text-slate-400">Resultados promissores que ainda precisam passar pelo Evidence Gate.</div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-4 backdrop-blur">
+          <div class="flex items-center gap-3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-xs font-bold text-amber-300">3</span>
+            <div>
+              <div class="text-sm font-semibold text-white">Em revisão</div>
+              <div class="text-xs text-slate-400">Resultados com anomalias sinalizadas sob averiguação do operador.</div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4 backdrop-blur">
+          <div class="flex items-center gap-3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-xs font-bold text-emerald-300">4</span>
+            <div>
+              <div class="text-sm font-semibold text-white">Achados sustentados</div>
+              <div class="text-xs text-slate-400">Vulnerabilidades com PoC validada, evidências provadas e relatório pronto.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. SEÇÃO PIPELINE (8 ETAPAS FLUXO HORIZONTAL) -->
+<section id="pipeline" class="relative mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal mb-10 text-center sm:mb-16">
+    <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/5 px-3 py-1 text-xs font-medium text-cyan-300">
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+      Pipeline
+    </div>
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">Pipeline de <span class="text-cyan-400">Security Research</span></h2>
+    <p class="mx-auto mt-4 max-w-2xl text-sm text-slate-400 sm:mt-6 sm:text-lg">O Cyber Hunter Lab transforma a investigação em um fluxo sequencial contínuo.</p>
+  </div>
+
+  <div class="reveal overflow-x-auto rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur">
+    <div class="flex min-w-[850px] items-center justify-between gap-2">
+      <div class="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3 text-center text-xs font-semibold text-cyan-300">1. Reconhecimento</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-violet-400/20 bg-violet-500/5 px-4 py-3 text-center text-xs font-semibold text-violet-300">2. Enumeração</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-fuchsia-400/20 bg-fuchsia-500/5 px-4 py-3 text-center text-xs font-semibold text-fuchsia-300">3. Correlação</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-3 text-center text-xs font-semibold text-emerald-300">4. Evidências</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-pink-400/20 bg-pink-500/5 px-4 py-3 text-center text-xs font-semibold text-pink-300">5. Validação</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-yellow-400/20 bg-yellow-500/5 px-4 py-3 text-center text-xs font-semibold text-yellow-300">6. Deduplicação</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-indigo-400/20 bg-indigo-500/5 px-4 py-3 text-center text-xs font-semibold text-indigo-300">7. Triagem</div>
+      <span class="text-slate-600">→</span>
+      <div class="rounded-xl border border-sky-400/20 bg-sky-500/5 px-4 py-3 text-center text-xs font-semibold text-sky-300">8. Relatório</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. FAQ (6 PERGUNTAS EM <details>) -->
+<section id="faq" class="relative mx-auto w-full max-w-4xl px-4 py-16 sm:px-6 sm:py-32">
+  <div class="reveal mb-10 text-center sm:mb-16">
+    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">Perguntas <span class="text-cyan-400">frequentes</span></h2>
+  </div>
+
+  <div class="space-y-3 sm:space-y-4">
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">O que é o Cyber Hunter Lab?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        É uma plataforma de Security Research que centraliza todo o processo de análise de segurança em um único ambiente operacional — combinando automação, correlação de dados e análise com IA local via Ollama e NVIDIA NIM.
+      </div>
+    </details>
+
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">O que significa "Evidence-First"?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        Significa que nenhum resultado de scanner é tratado como vulnerabilidade confirmada sem evidências verificáveis, mitigando alarmes falsos e focando no que realmente compromete o alvo.
+      </div>
+    </details>
+
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">Como funciona a integração com o Ollama local?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        O backend se comunica via API REST nativa assíncrona com a porta 11434 do Ollama na sua VPS. As respostas são transmitidas token a token com Server-Sent Events (SSE), mantendo total privacidade dos dados da sua pesquisa.
+      </div>
+    </details>
+
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">Como opera o Agente autônomo?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        O Agente utiliza um loop ReAct estruturado em JSON estrito. A cada iteração ele analisa o objetivo, pensa, executa uma ferramenta real (comando shell isolado ou requisição HTTP) e analisa a resposta até concluir a missão com relatório final.
+      </div>
+    </details>
+
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">É possível analisar capturas e imagens de tela?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        Sim! Selecionando modelos como `llama3.2-vision:11b` ou os endpoints multimodais da NVIDIA, você pode anexar prints de painéis administrativos expostos, códigos de erro e diagramas diretamente no chat via botão de anexo.
+      </div>
+    </details>
+
+    <details class="reveal group rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 font-medium text-white sm:p-6">
+        <span class="text-sm sm:text-base">Quais personas estão pré-configuradas?</span>
+        <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180 sm:h-5 sm:w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+      </summary>
+      <div class="px-4 pb-4 text-sm text-slate-400 sm:px-6 sm:pb-6">
+        O sistema possui 5 personas com system prompts rígidos: Pentest Engineer (código ofensivo que roda), Recon Specialist (mapeamento de ativos e portas), Forense Engineer (cadeia de custódia e hashes), Bug Bounty Hunter (vetores de alto impacto e PoCs curl) e Report Writer (CVSS e remediação técnica).
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- 10. CTA FINAL -->
+<section class="relative mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+  <div class="reveal relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-violet-500/10 to-fuchsia-500/10 p-6 text-center backdrop-blur sm:p-12 md:p-16">
+    <div class="relative">
+      <h2 class="text-2xl font-bold tracking-tight sm:text-3xl md:text-5xl">
+        Pronto para centralizar sua <br/>
+        <span class="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Security Research?</span>
+      </h2>
+      <p class="mx-auto mt-4 max-w-xl text-sm text-slate-300 sm:text-base">
+        Acesse abaixo o Chat IA e o Agente autônomo com suporte ao Ollama local e modelos NVIDIA NIM.
+      </p>
+      <div class="mt-8 flex justify-center">
+        <a href="#chat-agente"
+           class="btn-shine inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-cyan-500/40 sm:px-8 sm:text-base">
+          Iniciar Chat &amp; Agente
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. CHAT DEEPSEEK + AGENTE AUTÔNOMO -->
+<section id="chat-agente" class="relative mx-auto w-full max-w-7xl px-3 sm:px-6 pb-16 sm:pb-24">
+  <!-- Alternador de Modo Superior: Chat DeepSeek vs Agente Autônomo -->
+  <div class="mb-3.5 flex items-center justify-center">
+    <div class="inline-flex items-center gap-1 rounded-2xl bg-[#121216]/90 p-1 border border-white/10 shadow-xl backdrop-blur-md">
+      <button id="tabBtnChat" type="button" onclick="switchTab('chat')"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition bg-[#4D6BFE]/20 text-[#6C8CFF] border border-[#4D6BFE]/40 shadow-sm cursor-pointer">
+        <svg class="h-3.5 w-3.5 text-[#4D6BFE]" viewBox="0 0 64 64" fill="currentColor">
+          <path d="M16 38 C13 33 14 26.5 19 22 C24.5 17 33 16 40 18.5 C46.5 21 51.5 26.5 53 32.5 C54 35.5 54.2 39 53 42 C51.5 46.5 47 49.5 42 50 C34.5 51 28 47.5 23 42.5 L16 38 Z"/>
+        </svg>
+        <span>Chat DeepSeek</span>
+      </button>
+      <button id="tabBtnAgent" type="button" onclick="switchTab('agent')"
+              class="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition text-zinc-400 hover:text-white cursor-pointer">
+        <svg class="h-3.5 w-3.5 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>
+        <span>Agente Autônomo</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="reveal overflow-hidden rounded-3xl border border-white/10 bg-[#0e0e11] shadow-2xl shadow-black/90 flex flex-col h-[88vh] min-h-[660px] max-h-[960px] relative">
+    
+    <!-- ==================== DRAWER LATERAL DEEPSEEK (MENU ESQUERDO) ==================== -->
+    <div id="deepseekDrawerBackdrop" onclick="toggleDeepseekDrawer(false)"
+         class="hidden absolute inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity"></div>
+    
+    <div id="deepseekDrawer"
+         class="absolute top-0 bottom-0 left-0 z-50 w-72 sm:w-80 bg-[#121216] border-r border-white/[0.08] flex flex-col transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl">
+      <!-- Topo do Drawer -->
+      <div class="flex items-center justify-between p-4 border-b border-white/[0.08]">
+        <div class="flex items-center gap-2.5">
+          <svg class="h-7 w-7 text-[#4D6BFE]" viewBox="0 0 64 64" fill="none">
+            <path d="M16 38 C13 33 14 26.5 19 22 C24.5 17 33 16 40 18.5 C46.5 21 51.5 26.5 53 32.5 C54 35.5 54.2 39 53 42 C51.5 46.5 47 49.5 42 50 C34.5 51 28 47.5 23 42.5 L16 38 Z" fill="#4D6BFE"/>
+            <path d="M47 22 C50 18 55 15.5 59 17 C59.5 20.5 57.5 25 54 27.5 C51.5 29.5 49.5 29 47.5 27 L47 22 Z" fill="#4D6BFE"/>
+            <path d="M29 37 C26.5 41.5 22.5 44.5 18 45 C19.5 41.5 22 39 25.5 37.5 L29 37 Z" fill="#7FA2FF"/>
+            <circle cx="27" cy="27" r="2.2" fill="#0E0E11"/>
+          </svg>
+          <span class="font-bold text-white tracking-tight text-base">DeepSeek</span>
+        </div>
+        <button type="button" onclick="toggleDeepseekDrawer(false)" class="rounded-lg p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 transition">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Botão Novo Chat no Drawer -->
+      <div class="p-3">
+        <button type="button" onclick="clearChat(); toggleDeepseekDrawer(false);"
+                class="w-full flex items-center justify-center gap-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] px-4 py-2.5 text-xs font-semibold text-white transition shadow-sm">
+          <svg class="h-4 w-4 text-[#4D6BFE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Novo chat
+        </button>
+      </div>
+
+      <!-- Lista de Conversas Recentes -->
+      <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+        <div class="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Histórico de conversas</div>
+        <div id="drawerHistoryList" class="space-y-1">
+          <!-- Itens populados dinamicamente via JS -->
+          <div class="px-3 py-4 text-center text-xs text-zinc-500">Nenhuma conversa salva</div>
+        </div>
+      </div>
+
+      <!-- Rodapé do Drawer: Alternador e Status -->
+      <div class="p-3 border-t border-white/[0.08] space-y-2 bg-[#0d0d10]">
+        <button type="button" onclick="switchTab('agent'); toggleDeepseekDrawer(false);"
+                class="w-full flex items-center justify-between rounded-xl p-2.5 text-xs text-zinc-300 hover:text-white hover:bg-white/5 transition">
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>
+            <span>Modo Agente Autônomo</span>
+          </div>
+          <span class="text-[10px] bg-violet-500/20 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/30">ReAct</span>
+        </button>
+
+        <div class="flex items-center justify-between px-2 text-[11px] text-zinc-400 font-mono">
+          <span class="flex items-center gap-1.5">
+            <span id="drawerBackendDot" class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span id="drawerBackendText">Ollama / NVIDIA</span>
+          </span>
+          <button type="button" onclick="clearAllHistory()" class="text-zinc-500 hover:text-red-400 transition" title="Limpar todo o histórico">Limpar tudo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TOP BAR IDÊNTICA AO DEEPSEEK ==================== -->
+    <div class="flex items-center justify-between border-b border-white/[0.08] bg-[#121216] px-2.5 sm:px-4 py-2.5 sm:py-3 z-10 gap-2">
+      
+      <!-- Esquerda: Ícone Menu (dois traços horizontais exatamente como no print do DeepSeek) -->
+      <div class="flex items-center shrink-0">
+        <button id="deepseekMenuBtn" type="button" onclick="toggleDeepseekDrawer(true)"
+                class="flex h-9 w-9 items-center justify-center rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                title="Abrir menu lateral DeepSeek">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="4" y1="8" x2="16" y2="8"></line>
+            <line x1="4" y1="15" x2="20" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Centro: Seletor de Modelo DeepSeek (compacto, sem texto vazando no mobile) -->
+      <div class="flex items-center justify-center min-w-0 flex-1 max-w-[180px] sm:max-w-[260px]">
+        <select id="modelSelector"
+                aria-label="Selecionar modelo de IA"
+                class="w-full max-w-[150px] sm:max-w-[220px] truncate rounded-full border border-white/10 bg-[#1a1a1e] px-2.5 sm:px-3 py-1 font-sans text-xs font-medium text-zinc-200 outline-none transition focus:border-[#4D6BFE] hover:bg-[#222227] cursor-pointer text-center">
+          <optgroup label="Modelos Locais (Ollama)">
+            <option value="ollama/deepseek-r1:8b" selected>DeepSeek-R1</option>
+            <option value="ollama/pentest-raw">pentest-raw</option>
+            <option value="ollama/qwen3-coder:30b">qwen3-coder</option>
+            <option value="ollama/huihui_ai/qwen3-abliterated:8b">qwen3-abliterated</option>
+            <option value="ollama/llama3.2-vision:11b">llama3.2-vision</option>
+          </optgroup>
+          <optgroup label="Modelos Cloud (NVIDIA NIM)">
+            <option value="nvidia/deepseek-ai/deepseek-v4-pro">DeepSeek-V4 Pro</option>
+            <option value="nvidia/moonshotai/kimi-k3">Kimi-K3</option>
+            <option value="nvidia/nvidia/nemotron-3-ultra-550b">Nemotron-3</option>
+            <option value="nvidia/z-ai/glm-5.3-flash">GLM-5.3</option>
+            <option value="nvidia/meta/llama-3.2-11b-vision-instruct">Llama-3.2 11B</option>
+          </optgroup>
+        </select>
+        <div class="hidden md:flex items-center gap-1.5 rounded-full border border-white/5 bg-black/40 px-2.5 py-1">
+          <span id="backendStatusDot" class="h-2 w-2 rounded-full bg-emerald-400"></span>
+          <span id="backendStatusText" class="text-[11px] font-mono text-zinc-400">Online</span>
+        </div>
+      </div>
+
+      <!-- Direita: Som (Speaker mudo com barra) + Novo Chat (+) exatamente igual ao print -->
+      <div class="flex items-center gap-1">
+        <!-- Botão de Leitura de Áudio (TTS) -->
+        <button id="deepseekSoundBtn" type="button" onclick="toggleSpeech()"
+                class="flex h-9 w-9 items-center justify-center rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition"
+                title="Ativar/Desativar leitura de voz">
+          <!-- Ícone de som mudo com barra diagonal (idêntico ao screenshot) -->
+          <svg id="soundMutedIcon" class="h-5 w-5 text-zinc-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25M15.75 6.75l-4.5 4.5H7.5a1.5 1.5 0 00-1.5 1.5v2.5a1.5 1.5 0 001.5 1.5h3.75l4.5 4.5V6.75z" />
+          </svg>
+          <svg id="soundActiveIcon" class="h-5 w-5 hidden text-[#4D6BFE]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75z" />
+          </svg>
+        </button>
+
+        <!-- Botão Novo Chat (+) círculo com mais dentro (idêntico ao screenshot) -->
+        <button id="deepseekNewChatBtn" type="button" onclick="clearChat()"
+                class="flex h-9 w-9 items-center justify-center rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition"
+                title="Novo Chat">
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="9"></circle>
+            <line x1="12" y1="8.5" x2="12" y2="15.5" stroke-linecap="round"></line>
+            <line x1="8.5" y1="12" x2="15.5" y2="12" stroke-linecap="round"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==================== ABA 1: CHAT IDÊNTICO AO DEEPSEEK ==================== -->
+    <div id="panelChat" class="flex-1 flex flex-col min-h-0 bg-[#0e0e11] relative">
+      
+      <!-- Scroll das Mensagens com Área Centrada -->
+      <div id="chatScrollArea" class="flex-1 overflow-y-auto px-4 py-6 sm:px-8 max-w-3xl mx-auto w-full flex flex-col">
+        
+        <!-- ESTADO VAZIO IDÊNTICO AO SCREENSHOT -->
+        <div id="deepseekEmptyState" class="flex flex-col items-center justify-center flex-1 my-auto py-12 select-none">
+          <!-- Logo Baleia Azul DeepSeek -->
+          <div class="mb-5 flex items-center justify-center">
+            <svg class="h-16 w-16 text-[#4D6BFE] drop-shadow-[0_4px_28px_rgba(77,107,254,0.4)] transition-transform hover:scale-105" viewBox="0 0 64 64" fill="none">
+              <path d="M16 38 C13 33 14 26.5 19 22 C24.5 17 33 16 40 18.5 C46.5 21 51.5 26.5 53 32.5 C54 35.5 54.2 39 53 42 C51.5 46.5 47 49.5 42 50 C34.5 51 28 47.5 23 42.5 L16 38 Z" fill="#4D6BFE"/>
+              <path d="M47 22 C50 18 55 15.5 59 17 C59.5 20.5 57.5 25 54 27.5 C51.5 29.5 49.5 29 47.5 27 L47 22 Z" fill="#4D6BFE"/>
+              <path d="M29 37 C26.5 41.5 22.5 44.5 18 45 C19.5 41.5 22 39 25.5 37.5 L29 37 Z" fill="#7FA2FF"/>
+              <circle cx="27" cy="27" r="2.2" fill="#0E0E11"/>
+            </svg>
+          </div>
+
+          <!-- Texto idêntico ao print: "De onde você gostaria de começar?" -->
+          <h1 class="text-white font-semibold text-xl sm:text-2xl text-center px-4 tracking-normal">
+            De onde você gostaria de começar?
+          </h1>
+
+          <!-- Sugestões sutis de início rápido estilo DeepSeek -->
+          <div class="mt-8 flex flex-wrap justify-center gap-2 max-w-lg px-2">
+            <button type="button" onclick="setQuickPrompt('Analise este trecho de código em busca de vulnerabilidades e sugira remediação:')"
+                    class="rounded-2xl border border-white/[0.08] bg-[#1a1a1e] hover:bg-[#232328] px-3.5 py-2 text-xs text-zinc-300 transition">
+              🛡️ Análise de Vulnerabilidades
+            </button>
+            <button type="button" onclick="setQuickPrompt('Explique a PoC desta falha e descreva o impacto segundo a taxonomia CVSS v3.1:')"
+                    class="rounded-2xl border border-white/[0.08] bg-[#1a1a1e] hover:bg-[#232328] px-3.5 py-2 text-xs text-zinc-300 transition">
+              🎯 Explicação de PoC &amp; CVSS
+            </button>
+            <button type="button" onclick="setQuickPrompt('Gere um comando para escanear portas abertas e serviços com segurança:')"
+                    class="rounded-2xl border border-white/[0.08] bg-[#1a1a1e] hover:bg-[#232328] px-3.5 py-2 text-xs text-zinc-300 transition">
+              🔍 Enumeração e Recon
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de Mensagens do Chat -->
+        <div id="chatMessages" class="space-y-6 w-full hidden">
+          <!-- As mensagens do usuário e da IA são renderizadas dinamicamente aqui -->
+        </div>
+
+      </div>
+
+      <!-- Preview de Imagem Anexada -->
+      <div id="imagePreviewContainer" class="hidden px-4 pb-2 max-w-3xl mx-auto w-full">
+        <div class="relative inline-block border border-white/10 rounded-2xl overflow-hidden bg-[#18181c] p-1.5 shadow-lg">
+          <img id="imagePreview" src="" alt="Preview" class="h-20 w-auto rounded-xl object-cover" />
+          <button type="button" onclick="removeAttachedImage()" aria-label="Remover imagem"
+                  class="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md transition">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== INPUT CARD FLUTUANTE IDÊNTICO AO DEEPSEEK ==================== -->
+      <div class="p-3 sm:p-5 max-w-3xl mx-auto w-full z-10">
+        <div class="rounded-[28px] bg-[#1a1a1e] border border-white/[0.08] p-3 sm:p-4 shadow-2xl transition focus-within:border-white/20">
+          
+          <!-- Textarea com Auto-Resize e placeholder idêntico ao screenshot -->
+          <textarea id="chatInput" rows="1"
+                    placeholder="Mensagem ou segure para falar"
+                    aria-label="Mensagem para o DeepSeek"
+                    class="w-full resize-none bg-transparent px-2 pt-1 pb-2 text-[15px] text-white placeholder-zinc-500 outline-none leading-relaxed font-sans max-h-40 overflow-y-auto"></textarea>
+
+          <!-- Linha inferior de controles -->
+          <div class="flex items-center justify-between pt-2 gap-2">
+            
+            <!-- Botões da esquerda: Pensar (DeepThink R1) e Pesquisar (Web Search) -->
+            <div class="flex items-center gap-2">
+              <!-- Botão Pensar -->
+              <button type="button" id="btnThinkMode" onclick="toggleThinkMode()"
+                      class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-[#4d6bfe]/50 bg-[#4d6bfe]/15 text-[#6c8cff] hover:bg-[#4d6bfe]/25"
+                      title="Ativar/Desativar DeepThink R1 (Raciocínio Lógico)">
+                <svg class="h-3.5 w-3.5 text-[#4D6BFE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"/>
+                  <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(-30 12 12)"/>
+                  <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(90 12 12)"/>
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+                <span>Pensar</span>
+              </button>
+
+              <!-- Botão Pesquisar -->
+              <button type="button" id="btnSearchMode" onclick="toggleSearchMode()"
+                      class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-zinc-700/60 bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
+                      title="Ativar/Desativar Pesquisa na Web">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="9"/>
+                  <line x1="3.6" y1="9" x2="20.4" y2="9"/>
+                  <line x1="3.6" y1="15" x2="20.4" y2="15"/>
+                  <path d="M11.5 3a17 17 0 0 0 0 18"/>
+                  <path d="M12.5 3a17 17 0 0 1 0 18"/>
+                </svg>
+                <span>Pesquisar</span>
+              </button>
+            </div>
+
+            <!-- Botões da direita: (+) e Voz / Enviar -->
+            <div class="flex items-center gap-1.5">
+              <!-- Botão (+) para anexar imagem -->
+              <button type="button" onclick="document.getElementById('chatFileInput').click()"
+                      class="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition"
+                      title="Anexar imagem de evidência">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16" stroke-linecap="round"></line>
+                  <line x1="8" y1="12" x2="16" y2="12" stroke-linecap="round"></line>
+                </svg>
+                <input type="file" id="chatFileInput" accept="image/*" class="hidden" onchange="handleImageSelected(event)" />
+              </button>
+
+              <!-- Botão de Áudio (onda de voz) / Enviar (círculo azul com seta) -->
+              <button type="button" id="btnVoiceOrSend" onclick="handleVoiceOrSend()"
+                      class="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:text-white transition"
+                      title="Voz / Enviar mensagem">
+                <!-- Ícone de onda sonora idêntico ao screenshot (•)) -->
+                <div id="voiceIconWrapper" class="flex items-center justify-center">
+                  <svg class="h-6 w-6 text-zinc-400 hover:text-zinc-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path stroke-linecap="round" d="M10 9.5c.8-.8 2-.8 2.8 0m-4.2-1.4c1.6-1.6 4-1.6 5.6 0M12 12h.01" stroke-width="2.5"></path>
+                    <path stroke-linecap="round" d="M14 14.5c-.8.8-2 .8-2.8 0m4.2 1.4c-1.6 1.6-4 1.6-5.6 0"></path>
+                  </svg>
+                </div>
+                <!-- Ícone de Enviar (círculo azul com seta branca para cima) -->
+                <div id="sendArrowWrapper" class="hidden h-8 w-8 rounded-full bg-[#4D6BFE] hover:bg-[#3C5BFE] text-white flex items-center justify-center shadow-lg transition">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                    <polyline points="5 12 12 5 19 12"></polyline>
+                  </svg>
+                </div>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+        
+        <div class="mt-2 flex items-center justify-between px-3 text-[11px] text-zinc-500 font-mono">
+          <span>DeepSeek pode cometer erros. Verifique informações importantes.</span>
+          <span id="tokenCounter">Tokens: 0</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== ABA 2: AGENTE AUTÔNOMO (REACT LOOP COM LOGS) ==================== -->
+    <div id="panelAgent" class="hidden flex-1 flex flex-col min-h-0 bg-[#0e0e11]">
+      <!-- Controles Superiores do Agente -->
+      <div class="border-b border-white/5 bg-[#18191a] p-4 sm:p-5">
+        <div class="max-w-5xl mx-auto space-y-4">
+          <div class="grid gap-3 sm:grid-cols-4">
+            <!-- Persona -->
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Persona Especializada</label>
+              <select id="agentPersona" aria-label="Persona do agente" class="w-full rounded-xl border border-white/10 bg-[#282a2c] px-3 py-2 text-xs text-slate-200 outline-none focus:border-violet-400">
+                <option value="pentest" selected>🔴 Pentest Engineer (Ferramentas ofensivas que rodam)</option>
+                <option value="recon">🔍 Recon Specialist (Subdomínios, portas e ASN)</option>
+                <option value="forense">🧬 Forense Engineer (SHA-256 e cadeia de custódia)</option>
+                <option value="bugbounty">🎯 Bug Bounty Hunter (IDOR, SSRF e PoC em curl)</option>
+                <option value="report">📄 Report Writer (Sumário executivo e CVSS v3.1)</option>
+              </select>
+            </div>
+
+            <!-- Iterações Máximas -->
+            <div>
+              <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Iterações Máx</label>
+              <input id="agentMaxIter" type="number" min="1" max="25" value="8" aria-label="Número máximo de iterações" class="w-full rounded-xl border border-white/10 bg-[#282a2c] px-3 py-2 text-xs font-mono text-slate-200 outline-none focus:border-violet-400" />
+            </div>
+
+            <!-- Ações Executar / Parar -->
+            <div class="flex items-end gap-2">
+              <button id="agentRunBtn"
+                      type="button"
+                      onclick="runAgent()"
+                      class="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 px-3 py-2 text-xs font-bold text-white shadow-lg transition hover:brightness-110">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
+                Executar
+              </button>
+
+              <button id="agentStopBtn"
+                      type="button"
+                      onclick="stopAgent()"
+                      disabled
+                      class="flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-40 disabled:pointer-events-none">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/></svg>
+                Parar
+              </button>
+            </div>
+          </div>
+
+          <!-- Objetivo -->
+          <div>
+            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Objetivo da Missão</label>
+            <textarea id="agentGoal"
+                      rows="2"
+                      placeholder="Ex: Enumere subdomínios de target.corp, teste portas 80/443 abertas e gere PoC de um possível endpoint exposto."
+                      aria-label="Objetivo da missão do agente"
+                      class="w-full resize-none rounded-xl border border-white/10 bg-[#282a2c] px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-violet-400"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de Status do Agente -->
+      <div class="border-b border-white/5 bg-[#1a1c1e] px-4 py-2 text-xs font-mono">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-slate-400">
+          <div class="flex items-center gap-4">
+            <div>Status: <span id="agentStatusLabel" class="text-emerald-400 font-semibold">Ocioso</span></div>
+            <div>Iteração: <span id="agentIterCount" class="text-white">0 / 8</span></div>
+            <div>Ações: <span id="agentActionsCount" class="text-cyan-400">0</span></div>
+          </div>
+          <div>Tokens: <span id="agentTokensCount" class="text-violet-400">0</span></div>
+        </div>
+      </div>
+
+      <!-- Terminal de Logs em Tempo Real -->
+      <div id="agentLogs" class="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-2 bg-[#0d1117]">
+        <div class="text-slate-500">[--:--:--] [info] Agente autônomo Cyber Hunter Lab inicializado. Aguardando objetivo...</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 11. FOOTER -->
+<footer class="relative border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
+  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+    <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600">
+          <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">Cyber Hunter Lab</div>
+          <div class="text-xs text-slate-500">Security Research Platform</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-500">
+        <a href="#processo" class="transition hover:text-white">Processo</a>
+        <a href="#arquitetura" class="transition hover:text-white">Arquitetura</a>
+        <a href="#ecossistema" class="transition hover:text-white">Ecossistema</a>
+        <a href="#pipeline" class="transition hover:text-white">Pipeline</a>
+        <a href="#chat-agente" class="transition hover:text-white">Chat &amp; Agente</a>
+        <a href="#faq" class="transition hover:text-white">FAQ</a>
+      </div>
+
+      <div class="text-center text-xs text-slate-600 md:text-right">
+        © <span id="year"></span> · Cyber Hunter Lab · Security Research Platform
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================ -->
+<!-- JAVASCRIPT PRINCIPAL (CHAT + AGENTE + ANIMAÇÕES)              -->
+<!-- ============================================================ -->
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // URL do Backend: se servido na porta 8000 usa relativo '', caso contrário usa http://localhost:8000
+  const API_BASE = window.location.port === '8000' ? '' : (localStorage.getItem('chl_api_url') || 'http://localhost:8000');
+
+  // Estado do Chat
+  let chatHistory = [];
+  let currentChatAbort = null;
+  let attachedImageBase64 = null;
+  let totalChatTokensEstimate = 0;
+
+  // Estado do Agente
+  let agentAbortController = null;
+  let agentRunning = false;
+  let agentActions = 0;
+  let agentTokens = 0;
+
+  // Checagem de Conexão com a API FastAPI
+  async function checkApiConnection() {
+    const dot = document.getElementById('backendStatusDot');
+    const label = document.getElementById('backendStatusText');
+    try {
+      const res = await fetch(`${API_BASE}/api/info`, { method: 'GET' });
+      if (res.ok) {
+        const data = await res.json();
+        dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+        label.textContent = `Online (${data.backend})`;
+        loadAvailableModels();
+        return;
+      }
+    } catch (_) {}
+    dot.className = 'h-2 w-2 rounded-full bg-amber-400';
+    label.textContent = 'API desconectada (Local)';
+  }
+  checkApiConnection();
+
+  // Carrega modelos dinamicamente se a API responder
+  async function loadAvailableModels() {
+    try {
+      const res = await fetch(`${API_BASE}/api/models`);
+      if (res.ok) {
+        const models = await res.json();
+        if (Array.isArray(models) && models.length > 0) {
+          const select = document.getElementById('modelSelector');
+          const current = select.value;
+          select.innerHTML = '';
+          const ollamaGroup = document.createElement('optgroup');
+          ollamaGroup.label = 'Ollama (Local)';
+          const nvidiaGroup = document.createElement('optgroup');
+          nvidiaGroup.label = 'NVIDIA NIM (Cloud API)';
+
+          models.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            let cleanLabel = (m.label || m.id)
+              .replace(/^Ollama\s*[·:]\s*/i, '')
+              .replace(/^NVIDIA\s*[·:]\s*/i, '')
+              .replace(/\s*\(Local.*?\)/i, '')
+              .replace(/\s*\(NVIDIA.*?\)/i, '')
+              .replace(/\s*\(Cloud.*?\)/i, '')
+              .trim();
+            if (m.id.includes('deepseek-r1')) cleanLabel = 'DeepSeek-R1';
+            opt.textContent = cleanLabel;
+            if (m.provider === 'nvidia') {
+              nvidiaGroup.appendChild(opt);
+            } else {
+              ollamaGroup.appendChild(opt);
+            }
+          });
+          select.appendChild(ollamaGroup);
+          select.appendChild(nvidiaGroup);
+          if ([...select.options].some(o => o.value === current)) {
+            select.value = current;
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Alternância de Abas (Chat DeepSeek vs Agente)
+  function switchTab(tab) {
+    const isChat = tab === 'chat';
+    document.getElementById('panelChat').classList.toggle('hidden', !isChat);
+    document.getElementById('panelAgent').classList.toggle('hidden', isChat);
+
+    const btnChat = document.getElementById('tabBtnChat');
+    const btnAgent = document.getElementById('tabBtnAgent');
+
+    if (isChat) {
+      btnChat.className = 'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition bg-[#4D6BFE]/20 text-[#6C8CFF] border border-[#4D6BFE]/40 shadow-sm cursor-pointer';
+      btnAgent.className = 'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
+    } else {
+      btnChat.className = 'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition text-zinc-400 hover:text-white cursor-pointer';
+      btnAgent.className = 'flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition bg-[#4D6BFE]/20 text-[#6C8CFF] border border-[#4D6BFE]/40 shadow-sm cursor-pointer';
+    }
+  }
+
+  // ==================== DRAWER LATERAL DEEPSEEK ====================
+  function toggleDeepseekDrawer(forceOpen) {
+    const drawer = document.getElementById('deepseekDrawer');
+    const backdrop = document.getElementById('deepseekDrawerBackdrop');
+    const isOpen = drawer.classList.contains('translate-x-0');
+    const open = forceOpen !== undefined ? forceOpen : !isOpen;
+
+    if (open) {
+      drawer.classList.remove('-translate-x-full');
+      drawer.classList.add('translate-x-0');
+      backdrop.classList.remove('hidden');
+      renderDrawerHistory();
+    } else {
+      drawer.classList.add('-translate-x-full');
+      drawer.classList.remove('translate-x-0');
+      backdrop.classList.add('hidden');
+    }
+  }
+
+  // ==================== MODOS DEEPSEEK (PENSAR & PESQUISAR) ====================
+  let thinkModeActive = true;
+  let searchModeActive = false;
+
+  function toggleThinkMode() {
+    thinkModeActive = !thinkModeActive;
+    const btn = document.getElementById('btnThinkMode');
+    if (thinkModeActive) {
+      btn.className = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-[#4d6bfe]/50 bg-[#4d6bfe]/15 text-[#6c8cff] hover:bg-[#4d6bfe]/25';
+    } else {
+      btn.className = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-zinc-700/60 bg-zinc-800/60 text-zinc-400 hover:text-zinc-200';
+    }
+  }
+
+  function toggleSearchMode() {
+    searchModeActive = !searchModeActive;
+    const btn = document.getElementById('btnSearchMode');
+    if (searchModeActive) {
+      btn.className = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-[#4d6bfe]/50 bg-[#4d6bfe]/15 text-[#6c8cff] hover:bg-[#4d6bfe]/25';
+    } else {
+      btn.className = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition cursor-pointer border border-zinc-700/60 bg-zinc-800/60 text-zinc-400 hover:text-zinc-200';
+    }
+  }
+
+  // ==================== ÁUDIO E VOZ ====================
+  let soundEnabled = false;
+
+  function toggleSpeech() {
+    soundEnabled = !soundEnabled;
+    const mutedIcon = document.getElementById('soundMutedIcon');
+    const activeIcon = document.getElementById('soundActiveIcon');
+    if (soundEnabled) {
+      mutedIcon.classList.add('hidden');
+      activeIcon.classList.remove('hidden');
+    } else {
+      mutedIcon.classList.remove('hidden');
+      activeIcon.classList.add('hidden');
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const clean = text.replace(/<[^>]+>/g, ' ').replace(/[#*_`]/g, ' ').trim();
+    if (!clean) return;
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Auto-resize do textarea do chat e alternância entre Ícone de Voz e Seta de Envio
+  const chatInput = document.getElementById('chatInput');
+
+  function updateVoiceSendUI() {
+    const hasContent = chatInput.value.trim().length > 0 || attachedImageBase64 !== null;
+    const voiceIcon = document.getElementById('voiceIconWrapper');
+    const sendArrow = document.getElementById('sendArrowWrapper');
+    if (hasContent) {
+      voiceIcon.classList.add('hidden');
+      sendArrow.classList.remove('hidden');
+    } else {
+      voiceIcon.classList.remove('hidden');
+      sendArrow.classList.add('hidden');
+    }
+  }
+
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+    updateVoiceSendUI();
+  });
+
+  // Enter envia, Shift+Enter quebra linha
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Reconhecimento de Voz (Web Speech API)
+  let speechRecognition = null;
+  let isRecordingVoice = false;
+
+  function handleVoiceOrSend() {
+    if (chatInput.value.trim().length > 0 || attachedImageBase64 !== null) {
+      sendChatMessage();
+      return;
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      chatInput.placeholder = 'Reconhecimento de voz não suportado neste navegador';
+      setTimeout(() => { chatInput.placeholder = 'Mensagem ou segure para falar'; }, 3000);
+      return;
+    }
+
+    const voiceWrapper = document.getElementById('voiceIconWrapper');
+
+    if (isRecordingVoice) {
+      speechRecognition?.stop();
+      return;
+    }
+
+    try {
+      speechRecognition = new SpeechRec();
+      speechRecognition.lang = 'pt-BR';
+      speechRecognition.continuous = false;
+      speechRecognition.interimResults = true;
+
+      voiceWrapper.classList.add('voice-recording-active');
+      isRecordingVoice = true;
+
+      speechRecognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        chatInput.value = transcript;
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+        updateVoiceSendUI();
+      };
+
+      speechRecognition.onerror = () => {
+        voiceWrapper.classList.remove('voice-recording-active');
+        isRecordingVoice = false;
+      };
+
+      speechRecognition.onend = () => {
+        voiceWrapper.classList.remove('voice-recording-active');
+        isRecordingVoice = false;
+        updateVoiceSendUI();
+      };
+
+      speechRecognition.start();
+    } catch (_) {
+      voiceWrapper.classList.remove('voice-recording-active');
+      isRecordingVoice = false;
+    }
+  }
+
+  // Sugestões de início rápido
+  function setQuickPrompt(promptText) {
+    chatInput.value = promptText;
+    chatInput.focus();
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+    updateVoiceSendUI();
+  }
+
+  // Upload de Imagem (base64)
+  function handleImageSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      attachedImageBase64 = evt.target.result;
+      document.getElementById('imagePreview').src = attachedImageBase64;
+      document.getElementById('imagePreviewContainer').classList.remove('hidden');
+      updateVoiceSendUI();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeAttachedImage() {
+    attachedImageBase64 = null;
+    document.getElementById('imagePreviewContainer').classList.add('hidden');
+    document.getElementById('chatFileInput').value = '';
+    updateVoiceSendUI();
+  }
+
+  // Limpar conversa e voltar ao estado de início DeepSeek
+  function clearChat() {
+    if (chatHistory.length > 0) {
+      saveCurrentChatSession();
+    }
+    chatHistory = [];
+    totalChatTokensEstimate = 0;
+    document.getElementById('tokenCounter').textContent = 'Tokens: 0';
+    document.getElementById('chatMessages').innerHTML = '';
+    document.getElementById('chatMessages').classList.add('hidden');
+    document.getElementById('deepseekEmptyState').classList.remove('hidden');
+    chatInput.value = '';
+    updateVoiceSendUI();
+  }
+
+  // ==================== PROCESSAMENTO DE RESPOSTA COM DEEPTHINK ====================
+  function parseDeepSeekText(rawText, isStreaming, thinkDurationSec) {
+    let thinkText = null;
+    let mainText = rawText;
+    const hasOpenThink = rawText.includes('<think>');
+    const hasCloseThink = rawText.includes('</think>');
+
+    if (hasOpenThink) {
+      const openIdx = rawText.indexOf('<think>');
+      if (hasCloseThink) {
+        const closeIdx = rawText.indexOf('</think>');
+        thinkText = rawText.substring(openIdx + 7, closeIdx).trim();
+        mainText = rawText.substring(closeIdx + 8).trim();
+      } else {
+        // Ainda está pensando (streaming)
+        thinkText = rawText.substring(openIdx + 7).trim();
+        mainText = '';
+      }
+    }
+
+    let html = '';
+
+    // Renderiza caixa do DeepThink R1 com sanfona/collapse
+    if (thinkText !== null) {
+      const isStillThinking = isStreaming && !hasCloseThink;
+      const timeLabel = isStillThinking ? 'Pensando...' : `Pensou por ${thinkDurationSec || 1}s`;
+      html += `
+        <div class="deepseek-think-box mb-4 rounded-2xl bg-[#141418] border border-white/[0.06] overflow-hidden text-xs">
+          <div class="flex items-center justify-between px-3.5 py-2 cursor-pointer select-none bg-white/[0.02] hover:bg-white/[0.04] transition" onclick="this.closest('.deepseek-think-box').classList.toggle('collapsed')">
+            <div class="flex items-center gap-2 font-mono text-zinc-400">
+              <span class="inline-block text-[#4D6BFE] ${isStillThinking ? 'animate-spin-slow' : ''}">⚛️</span>
+              <span class="font-medium text-zinc-300 text-[12px]">${timeLabel}</span>
+            </div>
+            <svg class="think-chevron h-3.5 w-3.5 text-zinc-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="think-content px-4 py-3 text-zinc-400 font-mono text-[12px] leading-relaxed border-t border-white/[0.04] bg-[#0c0c0f] whitespace-pre-wrap select-text">
+            ${escapeHtml(thinkText)}
+          </div>
+        </div>
+      `;
+    }
+
+    if (mainText) {
+      html += renderMarkdownWithDeepSeekCodes(mainText);
+    }
+
+    return html;
+  }
+
+  // Renderiza Markdown e adiciona barra de código DeepSeek com botão de copiar
+  function renderMarkdownWithDeepSeekCodes(text) {
+    let rendered = renderMarkdown(text);
+    return rendered;
+  }
+
+  function copySnippet(encodedCode, btn) {
+    const code = decodeURIComponent(encodedCode);
+    navigator.clipboard.writeText(code).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '✓ Copiado!';
+      setTimeout(() => { btn.innerHTML = original; }, 2000);
+    });
+  }
+
+  function copyTextToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '<svg class="h-4 w-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      setTimeout(() => { btn.innerHTML = original; }, 2000);
+    });
+  }
+
+  // ==================== ENVIO DE MENSAGEM COM SSE STREAMING ====================
+  async function sendChatMessage() {
+    const text = chatInput.value.trim();
+    if (!text && !attachedImageBase64) return;
+
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    updateVoiceSendUI();
+
+    // Esconde estado vazio e exibe container de mensagens
+    document.getElementById('deepseekEmptyState').classList.add('hidden');
+    const container = document.getElementById('chatMessages');
+    container.classList.remove('hidden');
+
+    const model = document.getElementById('modelSelector').value;
+
+    // 1. Mensagem do Usuário (layout refinado DeepSeek: alinhado à direita, fundo #232429)
+    const userMsgDiv = document.createElement('div');
+    userMsgDiv.className = 'flex flex-col items-end gap-1.5 w-full';
+
+    let userImgHtml = '';
+    if (attachedImageBase64) {
+      userImgHtml = `<img src="${attachedImageBase64}" class="h-28 w-auto rounded-2xl mb-2 object-cover border border-white/10 shadow-md" />`;
+    }
+
+    userMsgDiv.innerHTML = `
+      <div class="max-w-[85%] rounded-[22px] rounded-br-[6px] bg-[#232429] px-4 py-3 text-white text-[15px] leading-relaxed shadow-sm">
+        ${userImgHtml}
+        <div class="whitespace-pre-wrap select-text">${escapeHtml(text)}</div>
+      </div>
+    `;
+    container.appendChild(userMsgDiv);
+
+    chatHistory.push({ role: 'user', content: text });
+    totalChatTokensEstimate += Math.ceil(text.length / 4);
+    document.getElementById('tokenCounter').textContent = `Tokens: ${totalChatTokensEstimate}`;
+
+    const sentImage = attachedImageBase64;
+    removeAttachedImage();
+
+    // Rola até o final
+    const scrollArea = document.getElementById('chatScrollArea');
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+
+    // 2. Mensagem do Assistente DeepSeek (ícone baleia DeepSeek e conteúdo limpo)
+    const aiMsgDiv = document.createElement('div');
+    aiMsgDiv.className = 'flex items-start gap-3 w-full';
+    aiMsgDiv.innerHTML = `
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#18181c] border border-white/10 shadow-sm mt-0.5">
+        <svg class="h-5 w-5 text-[#4D6BFE]" viewBox="0 0 64 64" fill="currentColor">
+          <path d="M16 38 C13 33 14 26.5 19 22 C24.5 17 33 16 40 18.5 C46.5 21 51.5 26.5 53 32.5 C54 35.5 54.2 39 53 42 C51.5 46.5 47 49.5 42 50 C34.5 51 28 47.5 23 42.5 L16 38 Z"/>
+        </svg>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <div class="ai-content text-[15px] text-zinc-100 leading-relaxed prose-chat">
+          <span class="ai-text"></span><span class="cursor-blink"></span>
+        </div>
+        <!-- Barra de Ações DeepSeek (Copiar, Ler Áudio, Feedback) -->
+        <div class="ai-actions mt-3 flex items-center gap-1 opacity-0 transition-opacity">
+          <button type="button" class="btn-copy-reply flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition" title="Copiar resposta">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+          <button type="button" class="btn-tts-reply flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition" title="Ouvir em voz alta">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+          <button type="button" onclick="this.classList.toggle('text-[#4D6BFE]')" class="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition" title="Boa resposta">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+          </button>
+          <button type="button" onclick="this.classList.toggle('text-red-400')" class="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition" title="Resposta ruim">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+          </button>
+        </div>
+      </div>
+    `;
+    container.appendChild(aiMsgDiv);
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+
+    const textSpan = aiMsgDiv.querySelector('.ai-text');
+    const cursor = aiMsgDiv.querySelector('.cursor-blink');
+    const actionsBar = aiMsgDiv.querySelector('.ai-actions');
+    const copyBtn = aiMsgDiv.querySelector('.btn-copy-reply');
+    const ttsBtn = aiMsgDiv.querySelector('.btn-tts-reply');
+
+    let fullResponse = '';
+    const startTime = Date.now();
+    currentChatAbort = new AbortController();
+
+    try {
+      const response = await fetch(`${API_BASE}/api/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: chatHistory,
+          model: model,
+          images: sentImage ? [sentImage] : undefined,
+          think: thinkModeActive,
+          search: searchModeActive,
+        }),
+        signal: currentChatAbort.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Servidor respondeu com status ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.delta) {
+                fullResponse += data.delta;
+                const elapsedSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+                textSpan.innerHTML = parseDeepSeekText(fullResponse, true, elapsedSec);
+                scrollArea.scrollTop = scrollArea.scrollHeight;
+              }
+            } catch (_) {}
+          }
+        }
+      }
+
+      cursor.remove();
+      const totalElapsedSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+      textSpan.innerHTML = parseDeepSeekText(fullResponse, false, totalElapsedSec);
+      actionsBar.classList.remove('opacity-0');
+
+      // Configura botões de copiar e ouvir resposta completa
+      copyBtn.onclick = () => copyTextToClipboard(fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim(), copyBtn);
+      ttsBtn.onclick = () => speakText(fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim());
+
+      if (soundEnabled) {
+        speakText(fullResponse.replace(/<think>[\s\S]*?<\/think>/g, '').trim());
+      }
+
+      chatHistory.push({ role: 'assistant', content: fullResponse });
+      totalChatTokensEstimate += Math.ceil(fullResponse.length / 4);
+      document.getElementById('tokenCounter').textContent = `Tokens: ${totalChatTokensEstimate}`;
+      saveCurrentChatSession();
+    } catch (err) {
+      cursor.remove();
+      if (err.name === 'AbortError') {
+        textSpan.innerHTML += '<div class="text-xs text-zinc-500 italic mt-2">[Geração interrompida]</div>';
+      } else {
+        textSpan.innerHTML = `<div class="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">Falha na conexão com a API (${escapeHtml(err.message)}). Certifique-se de que o backend FastAPI esteja ativo na porta 8000.</div>`;
+      }
+    } finally {
+      currentChatAbort = null;
+    }
+  }
+
+  // ==================== HISTÓRICO DE CONVERSAS (LOCALSTORAGE) ====================
+  function saveCurrentChatSession() {
+    if (!chatHistory || chatHistory.length === 0) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('deepseek_chat_sessions') || '[]');
+      const firstUserMsg = chatHistory.find(m => m.role === 'user')?.content || 'Nova conversa';
+      const title = firstUserMsg.slice(0, 36) + (firstUserMsg.length > 36 ? '...' : '');
+
+      const session = {
+        id: 'chat_' + Date.now(),
+        title: title,
+        date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+        messages: chatHistory
+      };
+
+      saved.unshift(session);
+      // Limita a 20 conversas recentes
+      if (saved.length > 20) saved.pop();
+      localStorage.setItem('deepseek_chat_sessions', JSON.stringify(saved));
+      renderDrawerHistory();
+    } catch (_) {}
+  }
+
+  function renderDrawerHistory() {
+    const list = document.getElementById('drawerHistoryList');
+    if (!list) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('deepseek_chat_sessions') || '[]');
+      if (saved.length === 0) {
+        list.innerHTML = '<div class="px-3 py-4 text-center text-xs text-zinc-500">Nenhuma conversa salva</div>';
+        return;
+      }
+      list.innerHTML = '';
+      saved.forEach((item, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'group flex items-center justify-between rounded-xl px-3 py-2 text-xs text-zinc-300 hover:bg-white/[0.06] hover:text-white transition cursor-pointer';
+        btn.innerHTML = `
+          <div class="flex items-center gap-2 truncate pr-2">
+            <svg class="h-3.5 w-3.5 text-zinc-500 shrink-0 group-hover:text-[#4D6BFE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span class="truncate">${escapeHtml(item.title)}</span>
+          </div>
+          <span class="text-[10px] text-zinc-500 group-hover:text-zinc-400 shrink-0">${item.date || ''}</span>
+        `;
+        btn.onclick = () => loadChatSession(idx);
+        list.appendChild(btn);
+      });
+    } catch (_) {}
+  }
+
+  function loadChatSession(idx) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('deepseek_chat_sessions') || '[]');
+      const session = saved[idx];
+      if (!session) return;
+
+      chatHistory = session.messages || [];
+      document.getElementById('deepseekEmptyState').classList.add('hidden');
+      const container = document.getElementById('chatMessages');
+      container.classList.remove('hidden');
+      container.innerHTML = '';
+
+      chatHistory.forEach(msg => {
+        if (msg.role === 'user') {
+          const userDiv = document.createElement('div');
+          userDiv.className = 'flex flex-col items-end gap-1.5 w-full';
+          userDiv.innerHTML = `
+            <div class="max-w-[85%] rounded-[22px] rounded-br-[6px] bg-[#232429] px-4 py-3 text-white text-[15px] leading-relaxed shadow-sm">
+              <div class="whitespace-pre-wrap select-text">${escapeHtml(msg.content)}</div>
+            </div>
+          `;
+          container.appendChild(userDiv);
+        } else if (msg.role === 'assistant') {
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'flex items-start gap-3 w-full';
+          aiDiv.innerHTML = `
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#18181c] border border-white/10 shadow-sm mt-0.5">
+              <svg class="h-5 w-5 text-[#4D6BFE]" viewBox="0 0 64 64" fill="currentColor">
+                <path d="M16 38 C13 33 14 26.5 19 22 C24.5 17 33 16 40 18.5 C46.5 21 51.5 26.5 53 32.5 C54 35.5 54.2 39 53 42 C51.5 46.5 47 49.5 42 50 C34.5 51 28 47.5 23 42.5 L16 38 Z"/>
+              </svg>
+            </div>
+            <div class="flex-1 overflow-hidden">
+              <div class="ai-content text-[15px] text-zinc-100 leading-relaxed prose-chat">
+                ${parseDeepSeekText(msg.content, false, 3)}
+              </div>
+            </div>
+          `;
+          container.appendChild(aiDiv);
+        }
+      });
+
+      toggleDeepseekDrawer(false);
+      const scrollArea = document.getElementById('chatScrollArea');
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    } catch (_) {}
+  }
+
+  function clearAllHistory() {
+    if (confirm('Deseja limpar todo o histórico salvo de conversas?')) {
+      localStorage.removeItem('deepseek_chat_sessions');
+      renderDrawerHistory();
+    }
+  }
+
+  // ==================== EXECUÇÃO DO AGENTE ====================
+  function logAgent(type, text) {
+    const logs = document.getElementById('agentLogs');
+    const now = new Date().toTimeString().split(' ')[0];
+
+    const colorMap = {
+      step: 'text-cyan-400 font-bold',
+      info: 'text-slate-400',
+      ok: 'text-emerald-400 font-semibold',
+      warn: 'text-amber-400',
+      err: 'text-red-400 font-bold',
+      tool: 'text-violet-400 font-mono',
+    };
+
+    const colorClass = colorMap[type] || 'text-slate-300';
+    const entry = document.createElement('div');
+    entry.className = 'leading-relaxed break-words';
+    entry.innerHTML = `<span class="text-slate-600">[${now}]</span> <span class="${colorClass}">[${type}]</span> ${escapeHtml(text)}`;
+    logs.appendChild(entry);
+    logs.scrollTop = logs.scrollHeight;
+  }
+
+  async function runAgent() {
+    const goal = document.getElementById('agentGoal').value.trim();
+    if (!goal) {
+      alert('Por favor, informe o objetivo da missão.');
+      return;
+    }
+
+    const persona = document.getElementById('agentPersona').value;
+    const maxIter = parseInt(document.getElementById('agentMaxIter').value) || 8;
+    const model = document.getElementById('modelSelector').value;
+
+    agentRunning = true;
+    agentActions = 0;
+    agentTokens = 0;
+
+    document.getElementById('agentRunBtn').disabled = true;
+    document.getElementById('agentStopBtn').disabled = false;
+    document.getElementById('agentStatusLabel').textContent = 'Executando';
+    document.getElementById('agentStatusLabel').className = 'text-cyan-400 font-semibold animate-pulse';
+    document.getElementById('agentIterCount').textContent = `0 / ${maxIter}`;
+    document.getElementById('agentActionsCount').textContent = '0';
+    document.getElementById('agentTokensCount').textContent = '0';
+
+    logAgent('info', `Iniciando loop do agente. Persona: ${persona} | Modelo: ${model} | Iterações: ${maxIter}`);
+    logAgent('info', `Objetivo: "${goal}"`);
+
+    agentAbortController = new AbortController();
+
+    try {
+      const response = await fetch(`${API_BASE}/api/agent/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          goal: goal,
+          persona: persona,
+          max_iterations: maxIter,
+          model: model,
+        }),
+        signal: agentAbortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Servidor respondeu com status ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6));
+              handleAgentEvent(event);
+            } catch (_) {}
+          }
+        }
+      }
+
+      logAgent('ok', 'Execução do agente finalizada com sucesso.');
+      document.getElementById('agentStatusLabel').textContent = 'Concluído';
+      document.getElementById('agentStatusLabel').className = 'text-emerald-400 font-semibold';
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        logAgent('warn', 'Execução abortada pelo usuário.');
+        document.getElementById('agentStatusLabel').textContent = 'Interrompido';
+        document.getElementById('agentStatusLabel').className = 'text-amber-400 font-semibold';
+      } else {
+        logAgent('err', `Falha de conexão com a API: ${err.message}`);
+        document.getElementById('agentStatusLabel').textContent = 'Erro';
+        document.getElementById('agentStatusLabel').className = 'text-red-400 font-semibold';
+      }
+    } finally {
+      agentRunning = false;
+      document.getElementById('agentRunBtn').disabled = false;
+      document.getElementById('agentStopBtn').disabled = true;
+      agentAbortController = null;
+    }
+  }
+
+  function handleAgentEvent(ev) {
+    if (ev.type === 'iteration') {
+      document.getElementById('agentIterCount').textContent = `${ev.current} / ${ev.max}`;
+      logAgent('step', `Iteração ${ev.current} de ${ev.max}`);
+    } else if (ev.type === 'thought') {
+      logAgent('info', `Pensamento: ${ev.content}`);
+    } else if (ev.type === 'tool_call') {
+      agentActions++;
+      document.getElementById('agentActionsCount').textContent = agentActions;
+      logAgent('tool', `Executando Tool: ${ev.tool} -> ${JSON.stringify(ev.args)}`);
+    } else if (ev.type === 'tool_result') {
+      logAgent('ok', `Resultado da Tool (${ev.tool}):\n${ev.summary}`);
+    } else if (ev.type === 'final') {
+      logAgent('ok', `RELATÓRIO FINAL:\n${ev.content}`);
+    } else if (ev.type === 'tokens') {
+      agentTokens = ev.total;
+      document.getElementById('agentTokensCount').textContent = agentTokens;
+    } else if (ev.type === 'error') {
+      logAgent('err', ev.message);
+    }
+  }
+
+  function stopAgent() {
+    if (agentAbortController) {
+      agentAbortController.abort();
+    }
+  }
+
+  // Utilitários de escape e Markdown
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function renderMarkdown(raw) {
+    if (window.marked) {
+      try {
+        let html = marked.parse(raw, { breaks: true, gfm: true });
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const preElements = temp.querySelectorAll('pre');
+        preElements.forEach((pre) => {
+          const codeEl = pre.querySelector('code');
+          const codeText = codeEl ? codeEl.innerText : pre.innerText;
+          let lang = 'code';
+          if (codeEl && codeEl.className) {
+            const match = codeEl.className.match(/language-(\w+)/);
+            if (match) lang = match[1];
+          }
+          const wrapper = document.createElement('div');
+          wrapper.className = 'my-3 overflow-hidden rounded-xl border border-white/10 bg-[#16171b] shadow-md font-mono text-[13px]';
+          wrapper.innerHTML = `
+            <div class="flex items-center justify-between border-b border-white/5 bg-[#1f2026] px-3.5 py-1.5 text-xs text-zinc-400 select-none">
+              <span class="font-mono text-zinc-300 lowercase">${escapeHtml(lang)}</span>
+              <button type="button" class="btn-copy-code flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition cursor-pointer">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copiar código</span>
+              </button>
+            </div>
+          `;
+          const btn = wrapper.querySelector('.btn-copy-code');
+          btn.onclick = () => {
+            navigator.clipboard.writeText(codeText).then(() => {
+              btn.innerHTML = '<span class="text-emerald-400 font-medium">✓ Copiado!</span>';
+              setTimeout(() => {
+                btn.innerHTML = `
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>Copiar código</span>
+                `;
+              }, 2000);
+            });
+          };
+          pre.className = 'overflow-x-auto p-3.5 text-zinc-200 leading-relaxed bg-transparent';
+          wrapper.appendChild(pre.cloneNode(true));
+          pre.replaceWith(wrapper);
+        });
+        return temp.innerHTML;
+      } catch (_) {}
+    }
+    return escapeHtml(raw).replace(/\n/g, '<br/>');
+  }
+
+  // Reveal On Scroll via IntersectionObserver
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('visible'));
+  }
+</script>
+
+</body>
+</html>
