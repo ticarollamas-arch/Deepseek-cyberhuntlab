@@ -1,128 +1,58 @@
-# 🛡️ Cyber Hunter Lab — Security Research & AI Platform
+<p align="center"><img src="assets/banner.svg" alt="Cyber Hunter Lab — chat e agente ReAct via Ollama e NVIDIA NIM" width="100%"></p>
 
-> **Plataforma Open Source de Pesquisa em Segurança Ofensiva & Defensiva, Inteligência Artificial e Agente Autônomo (ReAct).**
+# Cyber Hunter Lab — chat de IA e agente ReAct para pesquisa de segurança
 
----
+Aplicação com back-end **FastAPI (Python)** e front-end de página única que oferece um **chat com modelos de linguagem** com streaming e exibição do raciocínio (`<think>`), e um **agente autônomo ReAct** (pensamento → ação → observação → resposta) voltado a tarefas de investigação de segurança. Os modelos rodam **localmente via Ollama** (por exemplo, DeepSeek-R1) ou **na nuvem via NVIDIA NIM**.
 
-## 📌 Sobre o Projeto
+## Recursos
 
-O **Cyber Hunter Lab** é uma solução completa e moderna que une análise de segurança cibernética a modelos de linguagem de ponta. A plataforma conta com:
+- **Chat em tempo real** por Server-Sent Events (`POST /api/chat/stream`), com Markdown, destaque de código e botão de copiar.
+- **Painel de raciocínio** retrátil para modelos que expõem o processo de pensamento.
+- **Agente ReAct** (`POST /api/agent/stream`) com ferramentas para:
+  - executar comandos no terminal do servidor;
+  - fazer requisições HTTP.
+- **Seletor de modelos** (`GET /api/models`) entre Ollama local e NVIDIA NIM; informações do servidor em `GET /api/info`.
+- **Entrada por voz** no navegador e interface responsiva.
 
-1. **Interface de Chat com IA** com suporte a raciocínio em tempo real (*Chain of Thought* expansível / `<think>`), renderização Markdown avançada, streaming em tempo real e visualização limpa de código.
-2. **Agente Autônomo ReAct** para automação de tarefas investigativas, análise de vulnerabilidades, varreduras de rede e geração de relatórios técnicos.
-3. **Suporte Híbrido a Modelos**:
-   - **Local via Ollama**: Totalmente offline e privado (`deepseek-r1:8b`, `pentest-raw`, `qwen3-coder:30b`, `huihui_ai/qwen3-abliterated:8b`, `llama3.2-vision:11b`).
-   - **Cloud via NVIDIA NIM**: Acesso a modelos de altíssima escala e inferência acelerada (`deepseek-v4-pro`, `kimi-k3`, `nemotron-3-ultra-550b`, `glm-5.3-flash`, `llama-3.2-11b-vision`).
+## Instalação
 
----
+Requisitos: **Python 3.10+** e, para modelos locais, o **Ollama**.
 
-## ⚡ Funcionalidades Principais
-
-- 💬 **Chat em Tempo Real**: Streaming assíncrono via SSE (*Server-Sent Events*) com suporte a blocos de código com destaque de sintaxe e botão de cópia com 1 clique.
-- 🧠 **Painel de Raciocínio (Deep Think)**: Caixas retráteis com o processo de pensamento das IAs que suportam raciocínio detalhado (como DeepSeek-R1).
-- 🤖 **Agente de Segurança Autônomo**: Loop iterativo ReAct (*Thought → Action → Observation → Answer*) para diagnosticar e investigar requisições de segurança.
-- 📱 **Interface 100% Responsiva**: Otimizada para navegadores desktop e dispositivos móveis, sem vazamento de texto ou quebra de layout.
-- 🎛️ **Seletor Dinâmico de Modelos**: Alternância instantânea entre instâncias locais (Ollama) e em nuvem (NVIDIA NIM).
-- 🎙️ **Reconhecimento de Voz**: Entrada por comando de voz integrada para facilidade de uso em campo.
-- 🛡️ **Foco em Segurança**: Desenvolvido sob princípios de segurança da informação e pesquisa ética de vulnerabilidades.
-
----
-
-## 🏗️ Arquitetura do Sistema
-
-```
-cyber-hunter-lab/
-├── index.html        # Frontend SPA completo (Tailwind CSS, Marked.js, Áudio, Mobile-First)
-├── server.py         # Backend assíncrono FastAPI (Rotas /api/chat, /api/agent, /api/models, Ollama + NVIDIA)
-├── package.json      # Configurações de frontend e scripts Vite
-├── .env.example      # Modelo de variáveis de ambiente
-└── README.md         # Documentação e termos de licença
-```
-
----
-
-## 🚀 Como Executar Localmente
-
-### Pré-requisitos
-- **Python 3.10+** instalado
-- **Node.js 18+** (opcional para desenvolvimento Vite)
-- **Ollama** instalado e em execução (para modelos locais):
-  ```bash
-  ollama serve
-  ollama pull deepseek-r1:8b
-  ```
-
-### 1. Clonar o Repositório
 ```bash
-git clone https://github.com/seu-usuario/cyber-hunter-lab.git
-cd cyber-hunter-lab
-```
-
-### 2. Configurar o Ambiente Python
-```bash
-python3 -m venv venv
-source venv/bin/activate   # No Windows: venv\Scripts\activate
+git clone https://github.com/ticarollamas-arch/Deepseek-cyberhuntlab.git
+cd Deepseek-cyberhuntlab
+python3 -m venv venv && source venv/bin/activate
 pip install fastapi uvicorn httpx pydantic
+ollama pull deepseek-r1:8b      # ou outro modelo local
 ```
 
-### 3. Configurar Variáveis de Ambiente
-Crie ou edite o arquivo `.env` com base no `.env.example`:
+| Variável | Uso |
+|---|---|
+| `OLLAMA_URL` / `OLLAMA_MODEL` | Ollama local (padrão `http://localhost:11434`) |
+| `OLLAMA_NUM_CTX`, `OLLAMA_NUM_PREDICT`, `OLLAMA_TEMPERATURE` | Contexto, tamanho da resposta e temperatura |
+| `NVIDIA_API_KEY` / `NVIDIA_URL` | Modelos em nuvem da NVIDIA NIM (opcional) |
 
-```env
-# Configurações do Ollama (Local)
-OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=deepseek-r1:8b
+## Como usar
 
-# Configurações da NVIDIA NIM (Opcional para modelos em nuvem)
-NVIDIA_API_KEY=sua_chave_nvidia_nim_aqui
-NVIDIA_URL=https://integrate.api.nvidia.com/v1
-```
-
-### 4. Iniciar o Servidor
 ```bash
-# Executando o backend FastAPI (Porta 3000 ou 8000)
 python3 server.py
-# Ou via uvicorn:
-uvicorn server:app --host 0.0.0.0 --port 3000 --reload
+# ou: uvicorn server:app --host 127.0.0.1 --port 3000
 ```
 
-Abra no navegador em `http://localhost:3000`.
+Abra `http://localhost:3000`, escolha o modelo e converse, ou ative o modo agente para tarefas em várias etapas.
 
----
+## Segurança
 
-## 🌐 Integração com Modelos
+> **Atenção:** a ferramenta de terminal do agente executa comandos de shell no servidor, protegida apenas por uma lista de bloqueio com poucos padrões (como `rm -rf`, `mkfs`, `shutdown`).
+>
+> - Rode **somente localmente** ou num container ou VM isolado, sem dados sensíveis.
+> - **Nunca exponha** o servidor à internet sem autenticação.
+> - Use apenas em alvos próprios ou com autorização por escrito.
 
-| Provedor | Modelo | Tipo | Uso Recomendado |
-| :--- | :--- | :--- | :--- |
-| **Ollama (Local)** | `deepseek-r1:8b` | Raciocínio / CoT | Análise lógica, engenharia reversa, análise de código |
-| **Ollama (Local)** | `pentest-raw` | Segurança | Comandos técnicos, enumeração e auditoria |
-| **Ollama (Local)** | `qwen3-coder:30b` | Código / Scripting | Desenvolvimento de exploits e automação de scripts |
-| **NVIDIA NIM** | `deepseek-v4-pro` | Cloud API | Tarefas complexas de alto desempenho |
-| **NVIDIA NIM** | `nemotron-3-ultra` | Cloud API | Raciocínio analítico avançado e geração de relatórios |
+## Tecnologias
 
----
+Python · FastAPI · Uvicorn · httpx · Pydantic · Server-Sent Events · Ollama · NVIDIA NIM · HTML/Tailwind CSS · Marked.js · Web Speech API
 
-## 📜 Licença e Termos de Código Aberto
+## Licença
 
-Este projeto é um **software de código aberto (Open Source)**.
-
-### Termos de Uso e Modificação:
-- ✅ **Livre para Usar**: Você tem total liberdade para clonar, estudar, executar e utilizar este software para fins educacionais, pessoais ou profissionais.
-- ✅ **Livre para Modificar**: Qualquer pessoa pode alterar, adaptar, adicionar novos recursos, criar forks ou redistribuir este projeto.
-- ⚠️ **Manutenção Obrigatória de Créditos**: A única exigência obrigatória para qualquer redistribuição, modificação ou publicação derivada é **manter intactos todos os créditos originais do autor**.
-
-```
-Copyright (c) 2025-2026 Cyber Hunter Lab.
-Desenvolvido por: Cyber Hunter Lab / Autor Original
-
-É concedida permissão a qualquer pessoa que obtenha uma cópia deste software 
-para utilizá-lo, modificá-lo e distribuí-lo livremente, sob a condição de que 
-o aviso de direitos autorais acima e esta nota de crédito sejam preservados 
-em todas as cópias ou partes substanciais do software.
-```
-
----
-
-## 🤝 Contribuições
-
-Contribuições da comunidade de cibersegurança e desenvolvedores de IA são sempre bem-vindas! Sinta-se à vontade para abrir uma *Issue* ou enviar um *Pull Request*, respeitando as diretrizes de código aberto e atribuição de créditos.
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE).
